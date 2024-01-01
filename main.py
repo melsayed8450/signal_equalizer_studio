@@ -52,6 +52,7 @@ class MainWindow(uiclass, baseclass):
         self.slider_values = []
         self.lower_upper_freq_list = []
         self._initialize_signals_slots()
+        self.plot_fourier_transform = None
 
     def _initialize_signals_slots(self):
         self.import_action.triggered.connect(self._import_signal_file)
@@ -171,6 +172,7 @@ class MainWindow(uiclass, baseclass):
         sampling_frequency = self.signal.audio.frame_rate if self.signal.audio else self.signal.get_sampling_frequency()
 
         fourier_transform = np.fft.rfft(self.signal.y_vec)
+        self.plot_fourier_transform = fourier_transform
         frequencies = np.fft.rfftfreq(len(self.signal.y_vec), d= 1/sampling_frequency)
         self.phase = np.angle(fourier_transform)
 
@@ -243,7 +245,7 @@ class MainWindow(uiclass, baseclass):
             self.delete_sliders()
         self.mode = mode_type
         def draw_sliders(label_list):
-            for i in range(4):
+            for i in range(len(label_list)):
                 new_vertical_layout = QVBoxLayout()
                 label = QLabel(label_list[i])
                 slider = QSlider()
@@ -280,12 +282,11 @@ class MainWindow(uiclass, baseclass):
 
         def ecg_logic():
             freq_list = [
-            [0,3],
-            [3, 20],
-            [20,120],
-            [120,180],
+            [0,1],
+            [30, 160],
+            [161,250],
         ]
-            label_list = [ 'Abnormality 1', 'Abnormality 2', 'Abnormality 3', 'Normal']
+            label_list = [ 'Abnormality 1', 'Abnormality 2', 'Abnormality 3']
             self.lower_upper_freq_list = freq_list
             draw_sliders(label_list)
 
@@ -333,25 +334,30 @@ class MainWindow(uiclass, baseclass):
 
     def perform_window(self):
         total = len(self.slider_values)
-        result = self.original_fourier_transform
-        all_wave = np.array([])
+        # result = self.original_fourier_transform
+        all_wave = self.original_fourier_transform.copy()
         window_plot = np.array([])
         for i in range(total):
             lower_freq = self.lower_upper_freq_list[i][0]
             upper_freq = self.lower_upper_freq_list[i][1]
             amplitude = float(self.slider_values[i].text())
-            freq_range_mask = self.frequencies[(self.frequencies >= lower_freq) & (self.frequencies <= upper_freq)]
-            fourier_transform_mask = self.original_fourier_transform[(self.frequencies >= lower_freq) & (self.frequencies <= upper_freq)]
+            # freq_range_mask = self.frequencies[np.where((self.frequencies >= lower_freq) & (self.frequencies <= upper_freq))]
+
+            # fourier_transform_mask = self.original_fourier_transform[(self.frequencies >= lower_freq) & (self.frequencies <= upper_freq)]
+            start_indx = np.argmin(np.abs(self.frequencies - lower_freq))
+            last_indx = np.argmin(np.abs(self.frequencies - upper_freq))
             functions = {
-                WindowType.GAUSSIAN: lambda : gaussian(len(fourier_transform_mask), np.std(self.frequencies)) * amplitude,
-                WindowType.RECTANGLE: lambda : np.ones(len(fourier_transform_mask)) * amplitude,
-                WindowType.HAMMING: lambda : np.hamming(len(fourier_transform_mask)) * amplitude,
-                WindowType.HANNING: lambda : np.hanning(len(fourier_transform_mask)) * amplitude,
+                WindowType.GAUSSIAN: lambda : gaussian(last_indx - start_indx, np.std(self.frequencies)) * amplitude,
+                WindowType.RECTANGLE: lambda : np.ones(last_indx - start_indx) * amplitude,
+                WindowType.HAMMING: lambda : np.hamming(last_indx - start_indx) * amplitude,
+                WindowType.HANNING: lambda : np.hanning(last_indx - start_indx) * amplitude,
             }
             signal = functions[self.window_type]()
 
-            result = np.where(freq_range_mask, fourier_transform_mask * signal, fourier_transform_mask)
-            all_wave = np.concatenate((all_wave, result))
+            # result = np.where(freq_range_mask, fourier_transform_mask * signal, self.plot_fourier_transform)
+            all_wave[start_indx:last_indx] = self.original_fourier_transform[start_indx:last_indx] * signal
+
+            # all_wave = np.concatenate((all_wave, result))
             window_plot = np.concatenate((window_plot, signal))
 
         if len(all_wave) > len(self.fourier_transform):
@@ -377,8 +383,8 @@ class MainWindow(uiclass, baseclass):
 
             # self.newSampleArr = np.fft.irfft(self.fourier_transform).real
             # y_vec = np.int16(self.newSampleArr) 
-            data = (np.abs(self.fourier_transform) * np.exp(1j  * self.phase[:len(self.fourier_transform)]))
-            y_vec = (np.fft.irfft(data).real) 
+            # data = (np.abs(self.fourier_transform) * np.exp(1j  * self.phase[:len(self.fourier_transform)]))
+            y_vec = (np.fft.irfft(self.fourier_transform)) 
             # x_vec = self.signal.x_vec
 
             # y_vec = (np.fft.irfft((self.fourier_transform * np.exp(1j  * self.phase[:len(self.fourier_transform)]))).real) * -1

@@ -23,6 +23,7 @@ class CSVSignalLoader(ISignalLoader):
         data = pd.read_csv(file_path)
         x = data.iloc[:, 0].values
         y = data.iloc[:, 1].values
+        print(len(y))
         return Signal(x, y)
 
 class ExcelXSignalLoader(ISignalLoader):
@@ -50,5 +51,5 @@ class WavSignalLoader(ISignalLoader):
     def load(self, file_path: str) -> Signal:
         audio = AudioSegment.from_wav(file_path)
         audio_data = np.array(audio.get_array_of_samples())
-        time = np.arange(0, len(audio_data)) / (audio.frame_rate * 2)
+        time = np.arange(0, len(audio_data)) / (audio.frame_rate )
         return Signal(time, audio_data, audio)    
