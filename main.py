@@ -285,7 +285,7 @@ class MainWindow(uiclass, baseclass):
             [20,120],
             [120,180],
         ]
-            label_list = [ 'SVTA', 'AFIB', 'WPW', 'Normal']
+            label_list = [ 'Abnormality 1', 'Abnormality 2', 'Abnormality 3', 'Normal']
             self.lower_upper_freq_list = freq_list
             draw_sliders(label_list)
 
