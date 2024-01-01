@@ -258,30 +258,30 @@ class MainWindow(uiclass, baseclass):
                 slider.valueChanged.connect(partial(self.slider_value_changed, i))
         def animals_logic():
             freq_list = [
-                [0,450],
-                [450,1100],
-                [1100,3000],
-                [3000,9000],
+                [0,820],
+                [820,2500],
+                [2500,5000],
+                [5000,11000],
              ]
-            label_list = [ 'Dogs', 'Wolves', 'Crow', 'Bat']
+            label_list = [ 'Owl', 'Horse', 'Songbird', 'Snake']
             self.lower_upper_freq_list = freq_list
             draw_sliders(label_list)
 
         def music_logic():
             freq_list = [
              [0,200],
-            [200,500],
-            [400,800],
-            [800,2200],
+            [200,1000],
+            [1000,2000],
+            [2000,5000],
         ]
-            label_list = [ 'Kalimba', 'Guitar', 'Violin', 'Piccolo']
+            label_list = [ 'Bass', 'Piano', 'Trumpet', 'Drums']
             self.lower_upper_freq_list = freq_list
             draw_sliders(label_list)
 
         def ecg_logic():
             freq_list = [
-            [0,10],
-            [10, 20],
+            [0,3],
+            [3, 20],
             [20,120],
             [120,180],
         ]
